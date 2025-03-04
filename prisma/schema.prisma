@@ -1,0 +1,585 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "mongodb"
+    url      = env("DATABASE_URL")
+}
+
+model Tenant {
+    id         String       @id @default(uuid()) @map("_id")
+    name       String
+    slug       String
+    logo       String?
+    address    String?
+    phone      String?
+    email      String?
+    taxId      String?
+    currency   CurrencyType @default(COP)
+    timezone   TimeZones    @default(UTC)
+    websiteUrl String?
+    active     Boolean      @default(true)
+    createdAt  DateTime     @default(now())
+    updatedAt  DateTime     @updatedAt
+
+    // Many-to-many relationship with users
+    users UserOnTenant[]
+
+    Category      Category[]
+    Product       Product[]
+    Supplier      Supplier[]
+    Location      Location[]
+    InventoryItem InventoryItem[]
+    Purchase      Purchase[]
+    Customer      Customer[]
+    Sale          Sale[]
+    Adjustment    Adjustment[]
+    TransferOrder TransferOrder[]
+    PriceList     PriceList[]
+}
+
+// Junction table for many-to-many relationship between User and Tenant
+model UserOnTenant {
+    id        String   @id @default(uuid()) @map("_id")
+    userId    String
+    tenantId  String
+    role      Role     @default(USER) // Role within this specific tenant
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+    @@unique([userId, tenantId])
+}
+
+model User {
+    id        String    @id @default(uuid()) @map("_id")
+    email     String    @unique
+    password  String
+    firstName String
+    lastName  String
+    phone     String?
+    avatar    String?
+    isActive  Boolean   @default(true)
+    role      Role      @default(USER) // Global role
+    lastLogin DateTime?
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+
+    // Many-to-many relationship with tenants
+    tenants UserOnTenant[]
+
+    // Relaciones corregidas
+    createdPurchases   Purchase[]      @relation("PurchaseCreatedBy")
+    updatedPurchases   Purchase[]      @relation("PurchaseUpdatedBy")
+    createdSales       Sale[]          @relation("SaleCreatedBy")
+    updatedSales       Sale[]          @relation("SaleUpdatedBy")
+    createdAdjustments Adjustment[]    @relation("AdjustmentCreatedBy")
+    createdTransfers   TransferOrder[] @relation("TransferCreatedBy")
+}
+
+model Category {
+    id          String  @id @default(uuid()) @map("_id")
+    name        String
+    description String?
+    image       String?
+    active      Boolean @default(true)
+
+    // Relación con categoría padre (para subcategorías)
+    parentId      String?
+    parent        Category?  @relation("SubCategories", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    subCategories Category[] @relation("SubCategories")
+
+    tenantId String
+    tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    Product   Product[]
+}
+
+model Product {
+    id              String   @id @default(auto()) @map("_id") @db.ObjectId
+    sku             String // Código SKU único
+    barcode         String? // Código de barras
+    name            String // Nombre del producto
+    description     String? // Descripción detallada
+    brand           String? // Marca
+    model           String? // Modelo
+    images          String[] // URLs de imágenes
+    cost            Float // Costo de adquisición
+    price           Float // Precio de venta estándar
+    taxRate         Float    @default(0) // Tasa de impuesto aplicable
+    unitOfMeasure   String   @default("unit") // Unidad de medida (unidad, kg, litro)
+    minStockLevel   Int      @default(0) // Nivel mínimo de inventario
+    maxStockLevel   Int? // Nivel máximo de inventario
+    reorderPoint    Int      @default(0) // Punto de reorden
+    weight          Float? // Peso
+    dimensions      Json? // Dimensiones {length, width, height}
+    isActive        Boolean  @default(true)
+    isPerishable    Boolean  @default(false) // Indica si es perecedero
+    hasSerialNumber Boolean  @default(false) // Indica si tiene número de serie
+    notes           String? // Notas adicionales
+    createdAt       DateTime @default(now())
+    updatedAt       DateTime @updatedAt
+
+    // Relaciones
+    categoryId String?
+    category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+    tenantId String
+    tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+    // Items de inventario
+    inventoryItems InventoryItem[]
+
+    // Relación con detalles de ventas y compras
+    purchaseDetails PurchaseDetail[]
+    saleDetails     SaleDetail[]
+
+    // Relación con ajustes de inventario
+    adjustmentDetails AdjustmentDetail[]
+
+    // Relación con transferencias
+    transferDetails TransferDetail[]
+
+    // Relación con precios específicos
+    priceItems PriceItem[]
+}
+
+// Proveedores
+model Supplier {
+    id            String   @id @default(auto()) @map("_id") @db.ObjectId
+    name          String // Nombre o razón social
+    contactPerson String? // Persona de contacto
+    email         String? // Email de contacto
+    phone         String? // Teléfono
+    address       String? // Dirección
+    taxId         String? // Identificación fiscal
+    website       String? // Sitio web
+    paymentTerms  String? // Términos de pago
+    notes         String? // Notas adicionales
+    isActive      Boolean  @default(true)
+    rating        Int?     @default(0) // Calificación del proveedor (1-5)
+    createdAt     DateTime @default(now())
+    updatedAt     DateTime @updatedAt
+
+    // Relación con Tenant
+    tenantId String
+    tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+    // Compras realizadas a este proveedor
+    purchases Purchase[]
+}
+
+model Location {
+    id          String       @id @default(auto()) @map("_id") @db.ObjectId
+    name        String
+    type        LocationType
+    description String?
+    address     String?
+    isActive    Boolean      @default(true)
+    capacity    Float?
+    createdAt   DateTime     @default(now())
+    updatedAt   DateTime     @updatedAt
+
+    // Relación con ubicación padre (ej: estantería dentro de un almacén)
+    parentId     String?    @db.ObjectId
+    parent       Location?  @relation("SubLocations", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    subLocations Location[] @relation("SubLocations")
+
+    tenantId String
+    tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+    inventoryItems InventoryItem[]
+
+    sourceTransfers TransferOrder[] @relation("SourceLocation")
+    targetTransfers TransferOrder[] @relation("TargetLocation")
+}
+
+// Items de inventario (existencias reales)
+model InventoryItem {
+    id           String     @id @default(auto()) @map("_id") @db.ObjectId
+    quantity     Float // Cantidad actual
+    serialNumber String? // Número de serie (si aplica)
+    batchNumber  String? // Número de lote
+    expiryDate   DateTime? // Fecha de vencimiento (para perecederos)
+    purchaseDate DateTime? // Fecha de compra
+    notes        String? // Notas adicionales
+    status       ItemStatus @default(AVAILABLE) // Estado del item
+    createdAt    DateTime   @default(now())
+    updatedAt    DateTime   @updatedAt
+
+    // Relaciones
+    productId String  @db.ObjectId
+    product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+    locationId String   @db.ObjectId
+    location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+    tenantId String
+    tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+// Compras a proveedores
+model Purchase {
+    id             String         @id @default(auto()) @map("_id") @db.ObjectId
+    purchaseNumber String // Número de orden de compra
+    orderDate      DateTime       @default(now()) // Fecha de la orden
+    expectedDate   DateTime? // Fecha esperada de recepción
+    receivedDate   DateTime? // Fecha de recepción real
+    status         PurchaseStatus @default(DRAFT) // Estado de la compra
+    subtotal       Float // Subtotal
+    taxAmount      Float // Monto de impuestos
+    discountAmount Float          @default(0) // Descuentos
+    shippingCost   Float          @default(0) // Costo de envío
+    totalAmount    Float // Monto total
+    notes          String? // Notas adicionales
+    attachments    String[] // URLs de adjuntos (facturas, etc.)
+    paymentStatus  PaymentStatus  @default(PENDING) // Estado del pago
+    paymentDueDate DateTime? // Fecha límite de pago
+    createdAt      DateTime       @default(now())
+    updatedAt      DateTime       @updatedAt
+
+    // Relaciones
+    supplierId String   @db.ObjectId
+    supplier   Supplier @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+
+    tenantId String
+    tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+    // Detalles de la compra
+    details PurchaseDetail[]
+
+    // Usuario que creó/actualizó
+    createdById String
+    createdBy   User   @relation("PurchaseCreatedBy", fields: [createdById], references: [id])
+
+    updatedById String?
+    updatedBy   User?   @relation("PurchaseUpdatedBy", fields: [updatedById], references: [id])
+}
+
+// Detalles de la compra
+model PurchaseDetail {
+    id               String  @id @default(auto()) @map("_id") @db.ObjectId
+    quantity         Float // Cantidad ordenada
+    receivedQuantity Float   @default(0) // Cantidad recibida
+    unitCost         Float // Costo unitario
+    taxRate          Float // Tasa de impuesto
+    discount         Float   @default(0) // Descuento en porcentaje
+    totalCost        Float // Costo total
+    notes            String? // Notas específicas
+
+    // Relaciones
+    purchaseId String   @db.ObjectId
+    purchase   Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+
+    productId String  @db.ObjectId
+    product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+}
+
+// Clientes
+model Customer {
+    id        String       @id @default(auto()) @map("_id") @db.ObjectId
+    firstName String
+    lastName  String
+    email     String?
+    phone     String?
+    address   String?
+    taxId     String? // Identificación fiscal para facturación
+    notes     String?
+    type      CustomerType @default(INDIVIDUAL)
+    isActive  Boolean      @default(true)
+    createdAt DateTime     @default(now())
+    updatedAt DateTime     @updatedAt
+
+    // Relación con Tenant
+    tenantId String
+    tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+    // Ventas asociadas al cliente
+    sales Sale[]
+}
+
+// Ventas
+model Sale {
+    id             String        @id @default(auto()) @map("_id") @db.ObjectId
+    saleNumber     String // Número de venta
+    invoiceNumber  String? // Número de factura
+    saleDate       DateTime      @default(now()) // Fecha de venta
+    status         SaleStatus    @default(DRAFT) // Estado de la venta
+    subtotal       Float // Subtotal
+    taxAmount      Float // Monto de impuestos
+    discountAmount Float         @default(0) // Descuentos
+    totalAmount    Float // Monto total
+    paymentMethod  PaymentMethod @default(CASH) // Método de pago
+    paymentStatus  PaymentStatus @default(PENDING) // Estado del pago
+    notes          String? // Notas adicionales
+    createdAt      DateTime      @default(now())
+    updatedAt      DateTime      @updatedAt
+
+    // Relaciones
+    customerId String?   @db.ObjectId
+    customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+    tenantId String
+    tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+    // Detalles de la venta
+    details SaleDetail[]
+
+    // Usuario que creó/actualizó
+    createdById String
+    createdBy   User   @relation("SaleCreatedBy", fields: [createdById], references: [id])
+
+    updatedById String?
+    updatedBy   User?   @relation("SaleUpdatedBy", fields: [updatedById], references: [id])
+}
+
+// Detalles de la venta
+model SaleDetail {
+    id         String  @id @default(auto()) @map("_id") @db.ObjectId
+    quantity   Float // Cantidad vendida
+    unitPrice  Float // Precio unitario
+    taxRate    Float // Tasa de impuesto
+    discount   Float   @default(0) // Descuento en porcentaje
+    totalPrice Float // Precio total
+    notes      String? // Notas específicas
+
+    // Relaciones
+    saleId String @db.ObjectId
+    sale   Sale   @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+    productId String  @db.ObjectId
+    product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+}
+
+// Ajustes de inventario (mermas, donaciones, ajustes de conteo)
+model Adjustment {
+    id               String           @id @default(auto()) @map("_id") @db.ObjectId
+    adjustmentNumber String // Número de ajuste
+    adjustmentDate   DateTime         @default(now()) // Fecha del ajuste
+    adjustmentType   AdjustmentType // Tipo de ajuste
+    reason           String? // Razón del ajuste
+    notes            String? // Notas adicionales
+    status           AdjustmentStatus @default(DRAFT)
+    createdAt        DateTime         @default(now())
+    updatedAt        DateTime         @updatedAt
+
+    // Relaciones
+    tenantId String
+    tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+    // Detalles del ajuste
+    details AdjustmentDetail[]
+
+    // Usuario que creó
+    createdById String
+    createdBy   User   @relation("AdjustmentCreatedBy", fields: [createdById], references: [id])
+}
+
+// Detalles del ajuste
+model AdjustmentDetail {
+    id       String  @id @default(auto()) @map("_id") @db.ObjectId
+    quantity Float // Cantidad ajustada (positivo: incremento, negativo: decremento)
+    reason   String? // Razón específica
+
+    // Relaciones
+    adjustmentId String     @db.ObjectId
+    adjustment   Adjustment @relation(fields: [adjustmentId], references: [id], onDelete: Cascade)
+
+    productId String  @db.ObjectId
+    product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+}
+
+// Transferencias entre ubicaciones
+model TransferOrder {
+    id             String         @id @default(auto()) @map("_id") @db.ObjectId
+    transferNumber String // Número de orden de transferencia
+    requestDate    DateTime       @default(now()) // Fecha de solicitud
+    shipDate       DateTime? // Fecha de envío
+    receiveDate    DateTime? // Fecha de recepción
+    status         TransferStatus @default(DRAFT) // Estado de la transferencia
+    notes          String? // Notas adicionales
+    createdAt      DateTime       @default(now())
+    updatedAt      DateTime       @updatedAt
+
+    // Relaciones
+    sourceLocationId String   @db.ObjectId
+    sourceLocation   Location @relation("SourceLocation", fields: [sourceLocationId], references: [id], onDelete: Restrict)
+
+    targetLocationId String   @db.ObjectId
+    targetLocation   Location @relation("TargetLocation", fields: [targetLocationId], references: [id], onDelete: Restrict)
+
+    tenantId String
+    tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+    // Detalles de la transferencia
+    details TransferDetail[]
+
+    // Usuario que creó
+    createdById String
+    createdBy   User   @relation("TransferCreatedBy", fields: [createdById], references: [id])
+}
+
+// Detalles de la transferencia
+model TransferDetail {
+    id                String  @id @default(auto()) @map("_id") @db.ObjectId
+    requestedQuantity Float // Cantidad solicitada
+    shippedQuantity   Float   @default(0) // Cantidad enviada
+    receivedQuantity  Float   @default(0) // Cantidad recibida
+    notes             String? // Notas específicas
+
+    // Relaciones
+    transferId    String        @db.ObjectId
+    transferOrder TransferOrder @relation(fields: [transferId], references: [id], onDelete: Cascade)
+
+    productId String  @db.ObjectId
+    product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+}
+
+// Listas de precios (para diferentes clientes, temporadas, etc.)
+model PriceList {
+    id          String    @id @default(auto()) @map("_id") @db.ObjectId
+    name        String // Nombre de la lista de precios
+    description String? // Descripción
+    startDate   DateTime? // Fecha de inicio de validez
+    endDate     DateTime? // Fecha de fin de validez
+    isActive    Boolean   @default(true)
+    isDefault   Boolean   @default(false) // Indica si es la lista por defecto
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+
+    // Relación con Tenant
+    tenantId String
+    tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+    // Items de precio en esta lista
+    priceItems PriceItem[]
+}
+
+// Items de una lista de precios
+model PriceItem {
+    id          String @id @default(auto()) @map("_id") @db.ObjectId
+    price       Float // Precio específico
+    minQuantity Float  @default(1) // Cantidad mínima para este precio (descuentos por volumen)
+
+    // Relaciones
+    priceListId String    @db.ObjectId
+    priceList   PriceList @relation(fields: [priceListId], references: [id], onDelete: Cascade)
+
+    productId String  @db.ObjectId
+    product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+// Enums
+
+enum CurrencyType {
+    COP
+    USD
+}
+
+enum TimeZones {
+    UTC
+}
+
+enum Role {
+    SUPER_ADMIN // Administrador global del sistema
+    TENANT_ADMIN // Administrador de un tenant
+    MANAGER // Gerente
+    INVENTORY_MANAGER // Encargado de inventario
+    SALES_AGENT // Agente de ventas
+    CASHIER // Cajero
+    USER // Usuario básico
+}
+
+enum LocationType {
+    WAREHOUSE // Almacén
+    STORE // Tienda
+    SHELF // Estantería
+    RACK // Rack
+    BIN // Contenedor/Bin
+    OTHER // Otro
+}
+
+enum ItemStatus {
+    AVAILABLE // Disponible
+    RESERVED // Reservado
+    DAMAGED // Dañado
+    EXPIRED // Vencido
+    IN_TRANSIT // En tránsito
+    QUARANTINE // En cuarentena
+}
+
+enum PurchaseStatus {
+    DRAFT // Borrador
+    ORDERED // Ordenado
+    PARTIAL // Parcialmente recibido
+    RECEIVED // Recibido completamente
+    CANCELLED // Cancelado
+}
+
+enum PaymentStatus {
+    PENDING // Pendiente
+    PARTIAL // Parcialmente pagado
+    PAID // Pagado completamente
+    OVERDUE // Vencido
+    CANCELLED // Cancelado
+}
+
+enum CustomerType {
+    INDIVIDUAL // Cliente individual
+    COMPANY // Empresa
+    GOVERNMENT // Entidad gubernamental
+    NONPROFIT // Organización sin fines de lucro
+}
+
+enum SaleStatus {
+    DRAFT // Borrador
+    PROCESSING // En procesamiento
+    COMPLETED // Completada
+    RETURNED // Devuelta
+    CANCELLED // Cancelada
+}
+
+enum PaymentMethod {
+    CASH // Efectivo
+    CREDIT_CARD // Tarjeta de crédito
+    DEBIT_CARD // Tarjeta de débito
+    TRANSFER // Transferencia bancaria
+    CHECK // Cheque
+    CREDIT // Crédito (a pagar después)
+    MOBILE_PAYMENT // Pago móvil
+    OTHER // Otro
+}
+
+enum AdjustmentType {
+    STOCK_COUNT // Ajuste por conteo físico
+    DAMAGE // Daño
+    LOSS // Pérdida
+    EXPIRATION // Vencimiento
+    DONATION // Donación
+    INTERNAL_USE // Uso interno
+    RETURN_TO_SUPPLIER // Devolución a proveedor
+    OTHER // Otro
+}
+
+enum AdjustmentStatus {
+    DRAFT // Borrador
+    PENDING // Pendiente de aprobación
+    APPROVED // Aprobado
+    REJECTED // Rechazado
+    COMPLETED // Completado
+}
+
+enum TransferStatus {
+    DRAFT // Borrador
+    REQUESTED // Solicitado
+    APPROVED // Aprobado
+    SHIPPED // Enviado
+    PARTIALLY_RECEIVED // Parcialmente recibido
+    RECEIVED // Recibido completamente
+    CANCELLED // Cancelado
+}
