@@ -276,8 +276,8 @@ src/
  - npm/yarn
 
 ## Contribución
-### 1. Fork del repositorio
-### 2. Crear branch (git checkout -b feature/AmazingFeature)
-### 3. Commit cambios (git commit -m 'Add some AmazingFeature')
-### 4. Push al branch (git push origin feature/AmazingFeature)
-### 5. Crear Pull Request
+1. Fork del repositorio
+2. Crear branch (git checkout -b feature/AmazingFeature)
+3. Commit cambios (git commit -m 'Add some AmazingFeature')
+4. Push al branch (git push origin feature/AmazingFeature)
+5. Crear Pull Request
