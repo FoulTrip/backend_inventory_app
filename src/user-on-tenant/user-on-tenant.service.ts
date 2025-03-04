@@ -42,4 +42,16 @@ export class UserOnTenantService {
       include: { user: true },
     });
   }
+
+  // Obtener la relación entre un usuario y un tenant específico
+  async getUserTenantRelation(userId: string, tenantId: string) {
+    return this.prisma.userOnTenant.findUnique({
+      where: {
+        userId_tenantId: {
+          userId,
+          tenantId,
+        },
+      },
+    });
+  }
 }
