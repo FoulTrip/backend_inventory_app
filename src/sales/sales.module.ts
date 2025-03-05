@@ -8,20 +8,11 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { LocalAuthGuard } from 'src/auth/guards/local-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { PrismaModule } from 'src/prisma/prisma.module';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
-  controllers: [SalesController],
-  providers: [
-    SalesService,
-    AuthService,
-    LocalStrategy,
-    JwtStrategy,
-    JwtAuthGuard,
-    LocalAuthGuard,
-    RolesGuard,
-  ],
-  imports: [
-    PrismaModule,
-  ]
+  controllers: [SalesController, AuthModule],
+  providers: [SalesService],
+  imports: [PrismaModule]
 })
 export class SalesModule { }
