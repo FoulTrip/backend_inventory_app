@@ -43,7 +43,4 @@ export class CreateUserDto {
 
   @IsEnum(Role)
   role: Role;
-
-  @IsUUID()
-  tenantId: string;
 }
