@@ -1,7 +1,7 @@
 export class CreateUserOnTenantDto { }
 
 import { IsString, IsEnum } from 'class-validator';
-import { Role } from 'src/users/dto/create-user.dto';
+import { Role } from '@prisma/client';
 
 export class AssignUserToTenantDto {
   @IsString()

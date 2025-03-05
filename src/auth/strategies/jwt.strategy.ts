@@ -3,6 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UserOnTenantService } from '../../user-on-tenant/user-on-tenant.service';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -22,6 +23,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     async validate(payload: any) {
+        // Permitir SUPER_ADMIN sin tenant
+        if (payload.role === Role.SUPER_ADMIN) {
+            return {
+                userId: payload.userId,
+                role: Role.SUPER_ADMIN,
+                email: payload.email,
+            };
+        }
+
+        // Validar relación tenant para otros roles
         const userTenant = await this.userOnTenantService.getUserTenantRelation(
             payload.userId,
             payload.tenantId,

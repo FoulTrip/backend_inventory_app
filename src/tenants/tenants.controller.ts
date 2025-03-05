@@ -16,7 +16,7 @@ import { UpdateTenantDto } from './dto/update-tenant.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorator/roles.decorator';
-import { Role } from '../users/dto/create-user.dto';
+import { Role } from '@prisma/client';
 
 @Controller('tenants')
 @UseGuards(JwtAuthGuard, RolesGuard)

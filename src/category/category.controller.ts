@@ -5,7 +5,7 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorator/roles.decorator';
-import { Role } from 'src/users/dto/create-user.dto';
+import { Role } from '@prisma/client';
 import { User } from 'src/auth/strategies/user.decorator';
 import { AuthenticatedUser } from 'src/auth/dto/create-auth.dto';
 

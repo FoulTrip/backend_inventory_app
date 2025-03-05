@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AssignUserToTenantDto } from './dto/create-user-on-tenant.dto';
-import { Role } from 'src/users/dto/create-user.dto';
+import { Role } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -27,6 +27,7 @@ export class UserOnTenantService {
       data: { role: parsedRole }, // Usa el valor convertido
     });
   }
+
   // Obtener todos los tenants de un usuario
   async getTenantsByUser(userId: string) {
     return this.prisma.userOnTenant.findMany({
@@ -52,6 +53,14 @@ export class UserOnTenantService {
           tenantId,
         },
       },
+    });
+  }
+
+  // Obtener los tenants de un usuario
+  async getUserTenants(userId: string) {
+    return this.prisma.userOnTenant.findMany({
+      where: { userId },
+      include: { tenant: true },
     });
   }
 }

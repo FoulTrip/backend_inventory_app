@@ -1,6 +1,6 @@
 // login-user.dto.ts
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
-import { Role } from 'src/users/dto/create-user.dto';
+import { Role } from '@prisma/client';
+import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class LoginUserDto {
   @IsEmail()
@@ -11,11 +11,11 @@ export class LoginUserDto {
   password: string;
 
   @IsString()
-  @IsNotEmpty()
-  tenantId: string;
+  @IsOptional()
+  tenantId?: string; // Hacemos el tenantId opcional, será requerido para todos excepto SUPER_ADMIN
 }
 
-// auth-response.dto.ts
+// auth-response.dto.ts permanece igual
 export class AuthResponseDto {
   access_token: string;
   user: AuthenticatedUser;
@@ -23,7 +23,7 @@ export class AuthResponseDto {
 
 export interface AuthenticatedUser {
   userId: string;
-  tenantId: string;
+  tenantId?: string; // Puede ser opcional para SUPER_ADMIN
   role: Role;
   email: string;
 }

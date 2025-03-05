@@ -5,7 +5,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorator/roles.decorator';
-import { Role } from 'src/users/dto/create-user.dto';
+import { Role } from '@prisma/client';
 
 @Controller('products')
 @UseGuards(JwtAuthGuard, RolesGuard)

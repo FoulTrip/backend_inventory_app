@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Param, Put } from '@nestjs/common';
 import { UserOnTenantService } from './user-on-tenant.service';
 import { AssignUserToTenantDto } from './dto/create-user-on-tenant.dto';
-import { Role } from 'src/users/dto/create-user.dto';
+import { Role } from '@prisma/client';
 
 @Controller('user-on-tenant')
 export class UserOnTenantController {

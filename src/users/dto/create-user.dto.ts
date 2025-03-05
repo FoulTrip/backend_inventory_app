@@ -1,3 +1,4 @@
+import { Role } from '@prisma/client';
 import {
   IsString,
   IsEmail,
@@ -6,16 +7,6 @@ import {
   IsEnum,
   IsUUID,
 } from 'class-validator';
-
-export enum Role {
-  SUPER_ADMIN = 'SUPER_ADMIN',
-  TENANT_ADMIN = 'TENANT_ADMIN',
-  MANAGER = 'MANAGER',
-  INVENTORY_MANAGER = 'INVENTORY_MANAGER',
-  SALES_AGENT = 'SALES_AGENT',
-  CASHIER = 'CASHIER',
-  USER = 'USER',
-}
 
 export class CreateUserDto {
   @IsEmail()

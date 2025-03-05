@@ -2,6 +2,7 @@ import { Strategy } from 'passport-local';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from '../auth.service';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
@@ -14,6 +15,12 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     if (!user) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
-    return user;
+    
+    // Construir objeto AuthenticatedUser con la información básica
+    return {
+      userId: user.id,
+      email: user.email,
+      role: user.role // este es el role global del usuario
+    };
   }
 }

@@ -14,7 +14,7 @@ import { UpdatePurchaseDto } from './dto/update-purchase.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorator/roles.decorator';
-import { Role } from '../users/dto/create-user.dto';
+import { Role } from '@prisma/client';
 import { User } from '../auth/strategies/user.decorator';
 import { AuthenticatedUser } from 'src/auth/dto/create-auth.dto';
 
