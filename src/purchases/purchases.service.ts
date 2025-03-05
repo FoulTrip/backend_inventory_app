@@ -3,14 +3,19 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreatePurchaseDto } from './dto/create-purchase.dto';
 import { UpdatePurchaseDto } from './dto/update-purchase.dto';
 import { Purchase } from './entities/purchase.entity';
+import { AuthenticatedUser } from 'src/auth/dto/create-auth.dto';
 
 @Injectable()
 export class PurchasesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
-  async create(createPurchaseDto: CreatePurchaseDto): Promise<Purchase> {
+  async create(createPurchaseDto: CreatePurchaseDto, user: AuthenticatedUser): Promise<Purchase> {
     return this.prisma.purchase.create({
-      data: createPurchaseDto,
+      data: {
+        ...createPurchaseDto,
+        tenantId: user.tenantId,
+        createdById: user.userId
+      },
     });
   }
 
@@ -26,10 +31,18 @@ export class PurchasesService {
     });
   }
 
-  async update(id: string, updatePurchaseDto: UpdatePurchaseDto): Promise<Purchase> {
+  async update(
+    id: string,
+    user: AuthenticatedUser,
+    updatePurchaseDto: UpdatePurchaseDto
+  ): Promise<Purchase> {
     return this.prisma.purchase.update({
       where: { id },
-      data: updatePurchaseDto,
+      data: {
+        ...updatePurchaseDto,
+        tenantId: user.tenantId,
+        updatedById: user.userId
+      },
     });
   }
 

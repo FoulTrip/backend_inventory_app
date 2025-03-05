@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Get,
-  Param,
-  Put,
-  Delete,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Put, Delete, UseGuards } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -19,7 +10,10 @@ import { Role } from 'src/users/dto/create-user.dto';
 @Controller('products')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ProductController {
-  constructor(private readonly productService: ProductService) {}
+
+  constructor(
+    private readonly productService: ProductService,
+  ) {  }
 
   @Post()
   @Roles(Role.INVENTORY_MANAGER, Role.TENANT_ADMIN)

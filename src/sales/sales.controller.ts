@@ -1,34 +1,57 @@
-import { Controller, Post, Body, Get, Param, Put, Delete } from '@nestjs/common';
-import { SaleService } from './sales.service';
+import { Controller, Post, Body, Get, Param, Put, Delete, UseGuards } from '@nestjs/common';
+import { SalesService } from './sales.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { UpdateSaleDto } from './dto/update-sale.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorator/roles.decorator';
+import { Role } from '../users/dto/create-user.dto';
+import { User } from '../auth/strategies/user.decorator';
+import { AuthenticatedUser } from 'src/auth/dto/create-auth.dto';
 
 @Controller('sales')
-export class SaleController {
-  constructor(private readonly saleService: SaleService) {}
+@UseGuards(JwtAuthGuard, RolesGuard)
+export class SalesController {
+  constructor(private readonly saleService: SalesService) {}
 
   @Post()
-  async create(@Body() createSaleDto: CreateSaleDto) {
-    return this.saleService.create(createSaleDto);
+  @Roles(Role.TENANT_ADMIN, Role.SALES_AGENT, Role.CASHIER)
+  async create(
+    @Body() createSaleDto: CreateSaleDto,
+    @User() user: AuthenticatedUser
+  ) {
+    return this.saleService.create(createSaleDto, user);
   }
 
   @Get()
-  async findAll(@Param('tenantId') tenantId: string) {
-    return this.saleService.findAll(tenantId);
+  @Roles(Role.TENANT_ADMIN, Role.SALES_AGENT, Role.MANAGER, Role.CASHIER)
+  async findAll(@User() user: AuthenticatedUser) {
+    return this.saleService.findAll(user.tenantId);
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  @Roles(Role.TENANT_ADMIN, Role.SALES_AGENT, Role.MANAGER, Role.CASHIER)
+  async findOne(
+    @Param('id') id: string, 
+  ) {
     return this.saleService.findOne(id);
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() updateSaleDto: UpdateSaleDto) {
-    return this.saleService.update(id, updateSaleDto);
+  @Roles(Role.TENANT_ADMIN, Role.SALES_AGENT, Role.CASHIER)
+  async update(
+    @Param('id') id: string, 
+    @Body() updateSaleDto: UpdateSaleDto,
+    @User() user: AuthenticatedUser
+  ) {
+    return this.saleService.update(id, user, updateSaleDto);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string) {
+  @Roles(Role.TENANT_ADMIN, Role.SALES_AGENT)
+  async remove(
+    @Param('id') id: string,
+  ) {
     return this.saleService.remove(id);
   }
 }

@@ -3,14 +3,18 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateInventoryItemDto } from './dto/create-inventory.dto';
 import { UpdateInventoryItemDto } from './dto/update-inventory.dto';
 import { InventoryItem } from '@prisma/client';
+import { AuthenticatedUser } from 'src/auth/dto/create-auth.dto';
 
 @Injectable()
 export class InventoryService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createInventoryItemDto: CreateInventoryItemDto): Promise<InventoryItem> {
+  async create(createInventoryItemDto: CreateInventoryItemDto, user: AuthenticatedUser): Promise<InventoryItem> {
     return this.prisma.inventoryItem.create({
-      data: createInventoryItemDto,
+      data: {
+        ...createInventoryItemDto,
+        tenantId: user.tenantId,
+      },
     });
   }
 

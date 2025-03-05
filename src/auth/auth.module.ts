@@ -25,7 +25,7 @@ import { RolesGuard } from './guards/roles.guard';
         signOptions: { expiresIn: '1h' },
       }),
       inject: [ConfigService],
-    })
+    }),
   ],
   controllers: [AuthController],
   providers: [
@@ -38,4 +38,4 @@ import { RolesGuard } from './guards/roles.guard';
   ],
   exports: [AuthService, JwtAuthGuard, RolesGuard]
 })
-export class AuthModule {}
+export class AuthModule { }

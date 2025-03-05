@@ -1,34 +1,54 @@
-import { Controller, Post, Body, Get, Param, Put, Delete } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Put, Delete, UseGuards } from '@nestjs/common';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { LocationsService } from './locations.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorator/roles.decorator';
+import { Role } from '../users/dto/create-user.dto';
+import { User } from '../auth/strategies/user.decorator';
+import { AuthenticatedUser } from 'src/auth/dto/create-auth.dto';
 
 @Controller('locations')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class LocationsController {
   constructor(private readonly locationService: LocationsService) {}
 
   @Post()
-  async create(@Body() createLocationDto: CreateLocationDto) {
-    return this.locationService.create(createLocationDto);
+  @Roles(Role.TENANT_ADMIN, Role.INVENTORY_MANAGER)
+  async create(
+    @Body() createLocationDto: CreateLocationDto,
+    @User() user: AuthenticatedUser
+  ) {
+    return this.locationService.create(createLocationDto, user);
   }
 
   @Get()
-  async findAll(@Param('tenantId') tenantId: string) {
-    return this.locationService.findAll(tenantId);
+  @Roles(Role.TENANT_ADMIN, Role.INVENTORY_MANAGER, Role.MANAGER, Role.SALES_AGENT)
+  async findAll(@User() user: AuthenticatedUser) {
+    return this.locationService.findAll(user.tenantId);
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  @Roles(Role.TENANT_ADMIN, Role.INVENTORY_MANAGER, Role.MANAGER, Role.SALES_AGENT)
+  async findOne(
+    @Param('id') id: string
+  ) {
     return this.locationService.findOne(id);
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() updateLocationDto: UpdateLocationDto) {
+  @Roles(Role.TENANT_ADMIN, Role.INVENTORY_MANAGER)
+  async update(
+    @Body() updateLocationDto: UpdateLocationDto,
+    @Param('id') id: string
+  ) {
     return this.locationService.update(id, updateLocationDto);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string) {
+  @Roles(Role.TENANT_ADMIN, Role.INVENTORY_MANAGER)
+  async remove(@Param() id: string) {
     return this.locationService.remove(id);
   }
 }

@@ -3,14 +3,18 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { Location } from './entities/location.entity';
+import { AuthenticatedUser } from 'src/auth/dto/create-auth.dto';
 
 @Injectable()
 export class LocationsService {
   constructor(private readonly prisma: PrismaService) { }
 
-  async create(createLocationDto: CreateLocationDto): Promise<Location> {
+  async create(createLocationDto: CreateLocationDto, user: AuthenticatedUser): Promise<Location> {
     return this.prisma.location.create({
-      data: createLocationDto,
+      data: {
+        ...createLocationDto,
+        tenantId: user.tenantId,
+      },
     });
   }
 

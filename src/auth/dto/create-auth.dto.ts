@@ -1,5 +1,6 @@
 // login-user.dto.ts
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { Role } from 'src/users/dto/create-user.dto';
 
 export class LoginUserDto {
   @IsEmail()
@@ -17,10 +18,12 @@ export class LoginUserDto {
 // auth-response.dto.ts
 export class AuthResponseDto {
   access_token: string;
-  user: {
-    id: string;
-    email: string;
-    role: string;
-    tenantId: string;
-  };
+  user: AuthenticatedUser;
+}
+
+export interface AuthenticatedUser {
+  userId: string;
+  tenantId: string;
+  role: Role;
+  email: string;
 }

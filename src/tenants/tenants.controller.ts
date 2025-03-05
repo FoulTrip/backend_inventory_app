@@ -1,20 +1,36 @@
-import { Controller, Post, Body, Get, Param, Put, Delete, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Put,
+  Delete,
+  HttpException,
+  HttpStatus,
+  UseGuards
+} from '@nestjs/common';
 import { TenantsService } from './tenants.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorator/roles.decorator';
+import { Role } from '../users/dto/create-user.dto';
 
 @Controller('tenants')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class TenantsController {
-  constructor(private readonly tenantsService: TenantsService) {}
+  constructor(private readonly tenantsService: TenantsService) { }
 
-  // Crear un nuevo tenant
   @Post()
+  @Roles(Role.SUPER_ADMIN)
   async create(@Body() createTenantDto: CreateTenantDto) {
     return await this.tenantsService.create(createTenantDto);
   }
 
-  // Obtener todos los tenants
   @Get()
+  @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN)
   async findAll() {
     const result = await this.tenantsService.all();
     if (result?.success === false) {
@@ -23,9 +39,12 @@ export class TenantsController {
     return result;
   }
 
-  // Obtener un tenant por ID
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN)
+  async findOne(
+    @Param('id') id: string,
+  ) {
+    // Implement tenant access control if needed
     const result = await this.tenantsService.ById(id);
     if (result?.success === false) {
       throw new HttpException(result.error!, HttpStatus.NOT_FOUND);
@@ -33,9 +52,12 @@ export class TenantsController {
     return result;
   }
 
-  // Actualizar un tenant
   @Put(':id')
-  async update(@Param('id') id: string, @Body() updateTenantDto: UpdateTenantDto) {
+  @Roles(Role.SUPER_ADMIN, Role.TENANT_ADMIN)
+  async update(
+    @Param('id') id: string,
+    @Body() updateTenantDto: UpdateTenantDto,
+  ) {
     const result = await this.tenantsService.update(id, updateTenantDto);
     if (result?.success === false) {
       throw new HttpException(result.error!, HttpStatus.BAD_REQUEST);
@@ -43,8 +65,8 @@ export class TenantsController {
     return result;
   }
 
-  // Eliminar un tenant
   @Delete(':id')
+  @Roles(Role.SUPER_ADMIN)
   async remove(@Param('id') id: string) {
     const result = await this.tenantsService.remove(id);
     if (result?.success === false) {
