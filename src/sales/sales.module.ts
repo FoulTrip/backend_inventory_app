@@ -11,8 +11,8 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
-  controllers: [SalesController, AuthModule],
+  controllers: [SalesController],
   providers: [SalesService],
-  imports: [PrismaModule]
+  imports: [PrismaModule, AuthModule]
 })
 export class SalesModule { }

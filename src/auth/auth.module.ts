@@ -14,8 +14,8 @@ import { RolesGuard } from './guards/roles.guard';
 
 @Module({
   imports: [
-    forwardRef(() =>  UsersModule),
-    UserOnTenantModule,
+    UsersModule,
+    forwardRef(() => UserOnTenantModule),
     PassportModule,
     ConfigModule,
     JwtModule.registerAsync({

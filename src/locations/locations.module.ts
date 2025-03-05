@@ -12,11 +12,10 @@ import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
   controllers: [
-    LocationsController,
-    AuthModule,
+    LocationsController
   ],
   providers: [LocationsService],
-  imports: [PrismaModule],
+  imports: [PrismaModule, AuthModule],
 })
 
 export class LocationsModule { }
