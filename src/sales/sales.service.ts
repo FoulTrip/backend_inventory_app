@@ -13,7 +13,7 @@ export class SalesService {
     return this.prisma.sale.create({
       data: {
         ...createSaleDto,
-        tenantId: user.tenantId,
+        tenantId: user.tenantId!,
         createdById: user.userId
       },
     });

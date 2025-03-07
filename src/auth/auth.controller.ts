@@ -19,9 +19,9 @@ export class AuthController {
     @Body() loginUserDto: LoginUserDto,
     @User() user: AuthenticatedUser
   ) {
-    // Obtener el tenantId del cuerpo de la solicitud
-    const { tenantId } = loginUserDto;
-    return this.authService.login(user, tenantId);
+    const token = await this.authService.login(user);
+    const tenants = await this.userOnTenantService.getUserTenants(user.userId);
+    return { ...token, tenants }
   }
 
   @UseGuards(JwtAuthGuard)

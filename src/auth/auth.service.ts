@@ -58,6 +58,7 @@ export class AuthService {
       userId: user.userId,
       tenantId: tenantId,
       role: tenantRelation.role,
+      tenants: await this.userOnTenantService.getUserTenants(user.userId)
     };
 
     return {

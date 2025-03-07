@@ -13,7 +13,7 @@ export class LocationsService {
     return this.prisma.location.create({
       data: {
         ...createLocationDto,
-        tenantId: user.tenantId,
+        tenantId: user.tenantId!,
       },
     });
   }

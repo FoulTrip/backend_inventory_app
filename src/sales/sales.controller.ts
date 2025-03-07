@@ -26,7 +26,7 @@ export class SalesController {
   @Get()
   @Roles(Role.TENANT_ADMIN, Role.SALES_AGENT, Role.MANAGER, Role.CASHIER)
   async findAll(@User() user: AuthenticatedUser) {
-    return this.saleService.findAll(user.tenantId);
+    return this.saleService.findAll(user.tenantId!);
   }
 
   @Get(':id')

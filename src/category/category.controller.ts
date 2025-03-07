@@ -34,7 +34,7 @@ export class CategoryController {
     Role.SALES_AGENT,
   )
   async findAll(@User() user: AuthenticatedUser) {
-    return this.categoryService.findAll(user.tenantId);
+    return this.categoryService.findAll(user.tenantId!);
   }
 
   @Get(':id')

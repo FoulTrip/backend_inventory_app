@@ -13,7 +13,7 @@ export class InventoryService {
     return this.prisma.inventoryItem.create({
       data: {
         ...createInventoryItemDto,
-        tenantId: user.tenantId,
+        tenantId: user.tenantId!,
       },
     });
   }

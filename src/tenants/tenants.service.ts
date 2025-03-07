@@ -2,16 +2,27 @@ import { Injectable } from '@nestjs/common';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { UserOnTenantService } from 'src/user-on-tenant/user-on-tenant.service';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class TenantsService {
   constructor(
     private readonly prisma: PrismaService,
+    private userOnTenantService: UserOnTenantService
   ) { }
 
-  async create(data: CreateTenantDto) {
+  async create(data: CreateTenantDto, userId: string) {
     try {
       const tenant = await this.prisma.tenant.create({ data });
+      
+      // Asignar automáticamente al creador como ADMIN
+      await this.userOnTenantService.assignUserToTenant({
+        userId,
+        tenantId: tenant.id,
+        role: Role.TENANT_ADMIN,
+      })
+
       return { success: true, data: tenant };
     } catch (error) {
       if (error instanceof Error) {

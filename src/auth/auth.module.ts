@@ -12,6 +12,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { PrismaModule } from 'src/prisma/prisma.module';
+import { TenantGuard } from './guards/tenant.guard';
 
 @Module({
   imports: [
@@ -36,7 +37,8 @@ import { PrismaModule } from 'src/prisma/prisma.module';
     JwtStrategy,
     JwtAuthGuard,
     LocalAuthGuard,
-    RolesGuard
+    RolesGuard,
+    TenantGuard
   ],
   exports: [AuthService, JwtAuthGuard, RolesGuard]
 })

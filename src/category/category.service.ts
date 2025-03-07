@@ -18,7 +18,7 @@ export class CategoryService {
     return this.prisma.category.create({
       data: {
         ...createCategoryDto,
-        tenantId: user.tenantId,
+        tenantId: user.tenantId!,
       },
     });
   }

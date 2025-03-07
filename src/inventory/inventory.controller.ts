@@ -26,7 +26,7 @@ export class InventoryController {
   @Get()
   @Roles(Role.TENANT_ADMIN, Role.INVENTORY_MANAGER, Role.MANAGER, Role.SALES_AGENT)
   async findAll(@User() user: AuthenticatedUser) {
-    return this.inventoryService.findAll(user.tenantId);
+    return this.inventoryService.findAll(user.tenantId!);
   }
 
   @Get(':id')

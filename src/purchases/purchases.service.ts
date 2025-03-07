@@ -13,7 +13,7 @@ export class PurchasesService {
     return this.prisma.purchase.create({
       data: {
         ...createPurchaseDto,
-        tenantId: user.tenantId,
+        tenantId: user.tenantId!,
         createdById: user.userId
       },
     });

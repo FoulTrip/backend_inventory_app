@@ -17,6 +17,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorator/roles.decorator';
 import { Role } from '@prisma/client';
+import { User } from 'src/auth/strategies/user.decorator';
+import { AuthenticatedUser } from 'src/auth/dto/create-auth.dto';
 
 @Controller('tenants')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -25,8 +27,8 @@ export class TenantsController {
 
   @Post()
   @Roles(Role.SUPER_ADMIN)
-  async create(@Body() createTenantDto: CreateTenantDto) {
-    return await this.tenantsService.create(createTenantDto);
+  async create(@Body() createTenantDto: CreateTenantDto, @User() user: AuthenticatedUser) {
+    return await this.tenantsService.create(createTenantDto, user.userId);
   }
 
   @Get()

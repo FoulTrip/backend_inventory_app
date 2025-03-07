@@ -35,7 +35,7 @@ export class PurchasesController {
   @Get()
   @Roles(Role.TENANT_ADMIN, Role.INVENTORY_MANAGER, Role.MANAGER)
   async findAll(@User() user: AuthenticatedUser) {
-    return this.purchaseService.findAll(user.tenantId);
+    return this.purchaseService.findAll(user.tenantId!);
   }
 
   @Get(':id')
